@@ -1,8 +1,29 @@
-import { motion } from 'framer-motion'
-import Spline from '@splinetool/react-spline'
+import { motion, useMotionValue, useTransform } from 'framer-motion'
 
 export default function Hero() {
   const backend = import.meta.env.VITE_BACKEND_URL
+  const characterImg = import.meta.env.VITE_CHARACTER_IMAGE ||
+    'https://images.unsplash.com/photo-1603346134415-4016e864e18b?q=80&w=1200&auto=format&fit=crop'; // Tactical silhouette placeholder
+
+  // Simple parallax tilt for 2D character
+  const x = useMotionValue(0)
+  const y = useMotionValue(0)
+  const rotateX = useTransform(y, [-50, 50], [8, -8])
+  const rotateY = useTransform(x, [-50, 50], [-8, 8])
+
+  const handleMouseMove = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect()
+    const dx = e.clientX - (rect.left + rect.width / 2)
+    const dy = e.clientY - (rect.top + rect.height / 2)
+    x.set(Math.max(-50, Math.min(50, dx / 6)))
+    y.set(Math.max(-50, Math.min(50, dy / 6)))
+  }
+
+  const resetTilt = () => {
+    x.set(0)
+    y.set(0)
+  }
+
   return (
     <section className="relative min-h-screen overflow-hidden bg-[#06080f]">
       {/* Cinematic vignette */}
@@ -21,9 +42,29 @@ export default function Hero() {
         </button>
       </div>
 
-      {/* 3D Character from Spline (placeholder scene URL; replace with real if provided) */}
-      <div className="relative z-10 h-[70vh] w-full md:h-[78vh]">
-        <Spline scene="https://prod.spline.design/jdMPmS0-Placeholder/scene.splinecode" />
+      {/* 2D Character with subtle tilt and glow */}
+      <div
+        className="relative z-10 flex h-[70vh] w-full items-center justify-center md:h-[78vh]"
+        onMouseMove={handleMouseMove}
+        onMouseLeave={resetTilt}
+      >
+        <motion.div
+          style={{ rotateX, rotateY }}
+          className="relative will-change-transform"
+          transition={{ type: 'spring', stiffness: 120, damping: 12 }}
+        >
+          {/* Glow */}
+          <div className="absolute -inset-8 -z-10 rounded-[30px] bg-gradient-to-b from-orange-500/10 via-rose-600/10 to-transparent blur-2xl" />
+          {/* Character image */}
+          <img
+            src={characterImg}
+            alt="Elite operative"
+            className="mx-auto h-[60vh] w-auto max-w-[80vw] select-none rounded-[18px] object-cover object-center shadow-[0_30px_120px_rgba(255,80,20,0.25)] ring-1 ring-white/5"
+            draggable={false}
+          />
+          {/* Subtle foreground HUD */}
+          <div className="pointer-events-none absolute inset-x-0 -bottom-6 mx-auto h-24 w-[85%] rounded-full bg-gradient-to-t from-black/60 to-transparent blur-xl" />
+        </motion.div>
       </div>
 
       {/* Title and CTA */}
